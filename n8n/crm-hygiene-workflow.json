@@ -1,0 +1,16 @@
+{
+  "name": "CRM Hygiene – Nightly",
+  "nodes": [
+    {"name": "Schedule 2am", "type": "n8n-nodes-base.scheduleTrigger", "parameters": {"rule": {"interval": [{"field": "cronExpression", "expression": "0 2 * * *"}]}}, "position": [0, 0]},
+    {"name": "Get HubSpot Contacts", "type": "n8n-nodes-base.hubspot", "parameters": {"resource": "contact", "operation": "getAll", "returnAll": true}, "position": [220, 0]},
+    {"name": "Run Hygiene Script", "type": "n8n-nodes-base.executeCommand", "parameters": {"command": "python src/hygiene.py /tmp/contacts.csv"}, "position": [440, 0]},
+    {"name": "Has Merge Candidates?", "type": "n8n-nodes-base.if", "parameters": {"conditions": {"number": [{"value1": "={{$json.merge_review_queue.length}}", "operation": "larger", "value2": 0}]}}, "position": [660, 0]},
+    {"name": "Post Review Queue to Slack", "type": "n8n-nodes-base.slack", "parameters": {"channel": "#revops-data-quality", "text": "={{$json.merge_review_queue.length}} duplicate pairs need review. Quality score: {{$json.data_quality_score}}"}, "position": [880, -80]}
+  ],
+  "connections": {
+    "Schedule 2am": {"main": [[{"node": "Get HubSpot Contacts", "type": "main", "index": 0}]]},
+    "Get HubSpot Contacts": {"main": [[{"node": "Run Hygiene Script", "type": "main", "index": 0}]]},
+    "Run Hygiene Script": {"main": [[{"node": "Has Merge Candidates?", "type": "main", "index": 0}]]},
+    "Has Merge Candidates?": {"main": [[{"node": "Post Review Queue to Slack", "type": "main", "index": 0}]]}
+  }
+}

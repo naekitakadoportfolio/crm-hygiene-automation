@@ -1,0 +1,7 @@
+id,first_name,last_name,email,company,phone,lifecycle_stage,owner
+1,Maria,Chen,maria.chen@northwind.com,Northwind Health,+1 415 555 0101,customer,Jordan Lee
+2,maria,chen,Maria.Chen@Northwind.com ,Northwind Health Inc,(415) 555-0101,lead,
+3,Dev,Patel,dev.patel@brightline.io,Brightline Logistics,,customer,Sam Ortiz
+4,Ana,Lopez,ana.lopez@gmail,Acme Corp,555-0199,prospect,Sam Ortiz
+5,Tom,Reed,tom.reed@acme.com,ACME Corporation,+1 212 555 0123,mql,
+6,Thomas,Reed,tom.reed@acme.com,Acme Corp,,mql,Jordan Lee
