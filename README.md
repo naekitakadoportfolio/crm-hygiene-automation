@@ -7,6 +7,8 @@
 <a href="https://sider.ai/agents/web-creator/share/695ea81100a621619985fdfb"><img src="https://img.shields.io/badge/Portfolio-Nae_Kitakado-F4B4CD?style=flat-square"></a>
 </p>
 
+<p align="center"><a href="https://naekitakadoportfolio.github.io/crm-hygiene-automation/"><img src="https://img.shields.io/badge/%E2%96%B6%20Try%20the%20live%20demo-5B3A3A?style=for-the-badge" alt="Live demo"></a></p>
+
 # CRM Hygiene Automation
 
 A nightly data-quality pipeline for CRM contacts. It **normalizes** messy records, **validates** fields, **detects duplicates** with fuzzy matching, and sends a **merge review queue** to Slack. Nothing destructive happens without a human approving it.

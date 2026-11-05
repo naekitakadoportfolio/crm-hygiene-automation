@@ -1,0 +1,66 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CRM Hygiene Automation · Nae Kitakado</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--cocoa:#5B3A3A;--ink:#3E2A2F;--mauve:#8A6470;--blush:#FBE3EC;--pink:#F4B4CD;--rose:#F2A7C3;--card:#fff;--bg:#FDF4F7;--line:#F3D3DF}
+*{box-sizing:border-box}body{margin:0;font-family:'DM Sans',Inter,sans-serif;color:var(--ink);background:var(--bg)}
+.wrap{max-width:1080px;margin:0 auto;padding:24px 16px 48px}
+.hero{background:linear-gradient(120deg,var(--blush),var(--pink));border-radius:24px;padding:28px;position:relative;overflow:hidden}
+.hero:after{content:"";position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;background:rgba(255,255,255,.3)}
+.tag{display:inline-block;background:#fff;color:var(--cocoa);font-size:12px;letter-spacing:.14em;font-weight:600;border-radius:99px;padding:4px 12px}
+h1{color:var(--cocoa);font-size:clamp(28px,5vw,44px);margin:10px 0 6px;font-weight:600}
+.hero p{margin:0;max-width:640px;position:relative;z-index:1}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:20px}@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px}
+h2{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--cocoa);margin:0 0 12px}
+label{font-size:13px;font-weight:600;color:var(--mauve);display:block;margin:10px 0 4px}
+select,textarea,input{width:100%;font:inherit;border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff;color:var(--ink)}
+input[type=range],input[type=checkbox]{accent-color:var(--cocoa)}textarea{min-height:120px;resize:vertical}
+button{background:var(--cocoa);color:#fff;border:0;border-radius:99px;padding:11px 20px;font:inherit;font-weight:600;letter-spacing:.06em;cursor:pointer;margin-top:12px}
+button.ghost{background:#fff;color:var(--cocoa);border:1px solid var(--rose)}
+.pill{display:inline-block;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:600;margin:2px}
+.high{background:#F9D0D6;color:#8A2C3A}.medium{background:#FCE6C8;color:#7A4E12}.low{background:#DDF1E4;color:#1E5A36}
+ul{padding-left:18px;margin:6px 0}li{margin:4px 0}li::marker{color:var(--rose)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line)}th{color:var(--mauve)}
+.kpi{display:flex;gap:10px;flex-wrap:wrap}.kpi div{flex:1;min-width:120px;background:var(--blush);border-radius:14px;padding:12px}.kpi b{display:block;font-size:24px;color:var(--cocoa)}
+pre{background:#2E1F23;color:#FBE3EC;border-radius:12px;padding:12px;font-size:12px;overflow:auto;max-height:320px}
+footer{text-align:center;font-size:13px;color:var(--mauve);margin-top:28px}a{color:var(--cocoa)}
+.muted{color:var(--mauve);font-size:13px}
+</style></head><body><div class="wrap">
+<div class="hero"><span class="tag">LIVE DEMO</span><h1>CRM Hygiene Automation</h1>
+<p>Paste CRM contacts as CSV (or use the sample). The pipeline normalizes the data, validates fields, finds fuzzy duplicates and builds a merge review queue. Nothing is deleted without approval.</p></div>
+<div class="card" style="margin-top:20px"><h2>1 · Contacts CSV</h2><textarea id="csv" style="min-height:150px;font-family:monospace;font-size:12px">id,first_name,last_name,email,company,phone,lifecycle_stage,owner
+1,Maria,Chen,maria.chen@northwind.com,Northwind Health,+1 415 555 0101,customer,Jordan Lee
+2,maria,chen,Maria.Chen@Northwind.com ,Northwind Health Inc,(415) 555-0101,lead,
+3,Dev,Patel,dev.patel@brightline.io,Brightline Logistics,,customer,Sam Ortiz
+4,Ana,Lopez,ana.lopez@gmail,Acme Corp,555-0199,prospect,Sam Ortiz
+5,Tom,Reed,tom.reed@acme.com,ACME Corporation,+1 212 555 0123,mql,
+6,Thomas,Reed,tom.reed@acme.com,Acme Corp,,mql,Jordan Lee</textarea>
+<label>Duplicate threshold: <span id="tv">0.85</span></label><input type="range" id="th" min="0.5" max="1" step="0.05" value="0.85" oninput="tv.textContent=this.value">
+<button onclick="run()">RUN HYGIENE PIPELINE</button></div>
+<div class="card" style="margin-top:18px"><h2>2 · Results</h2><div class="kpi" id="kpi"></div></div>
+<div class="grid"><div class="card"><h2>Merge review queue</h2><div id="dupes" class="muted">—</div></div>
+<div class="card"><h2>Validation issues</h2><div id="iss" class="muted">—</div></div></div>
+<div class="card" style="margin-top:18px"><h2>Normalized records</h2><div id="norm" style="overflow:auto"></div></div>
+<script>
+const STAGES=["subscriber","lead","mql","sql","prospect","customer"];let rows=[],queue=[];
+function parse(t){const [h,...l]=t.trim().split("\n");const k=h.split(",");return l.map(x=>{const v=x.split(",");return Object.fromEntries(k.map((c,i)=>[c,(v[i]||"").trim()]))})}
+const title=s=>s.charAt(0).toUpperCase()+s.slice(1).toLowerCase();
+function norm(r){r.email=r.email.toLowerCase();r.first_name=title(r.first_name);r.last_name=title(r.last_name);
+ r.company_key=r.company.toLowerCase().replace(/\b(inc|corp|corporation|llc|ltd|co)\.?$/,"").trim();const d=r.phone.replace(/\D/g,"");r.phone=d.length>=10?"+1"+d.slice(-10):"";return r}
+function val(r){const i=[];if(!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/.test(r.email))i.push("invalid email");if(!STAGES.includes(r.lifecycle_stage))i.push("unknown stage");if(!r.owner)i.push("missing owner");if(!r.phone)i.push("missing phone");return i}
+function lev(a,b){const m=[...Array(b.length+1)].map((_,i)=>[i]);for(let j=1;j<=a.length;j++)m[0][j]=j;for(let i=1;i<=b.length;i++)for(let j=1;j<=a.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(b[i-1]==a[j-1]?0:1));return 1-m[b.length][a.length]/Math.max(a.length,b.length,1)}
+function sim(a,b){if(a.email&&a.email==b.email)return 1;return +(0.6*lev(a.first_name+" "+a.last_name,b.first_name+" "+b.last_name)+0.4*(a.company_key==b.company_key)).toFixed(2)}
+function run(){rows=parse(csv.value).map(norm);const th=+document.getElementById("th").value;const issues={};rows.forEach(r=>{const v=val(r);if(v.length)issues[r.id]=v});
+ queue=[];for(let i=0;i<rows.length;i++)for(let j=i+1;j<rows.length;j++){const s=sim(rows[i],rows[j]);if(s>=th){const f=r=>Object.values(r).filter(Boolean).length;queue.push({a:rows[i],b:rows[j],s,keep:f(rows[i])>=f(rows[j])?rows[i].id:rows[j].id,status:"pending"})}}
+ const n=Object.values(issues).flat().length,score=Math.round((1-n/(rows.length*4))*100);
+ kpi.innerHTML=`<div><b>${rows.length}</b>records</div><div><b>${queue.length}</b>duplicate pairs</div><div><b>${Object.keys(issues).length}</b>records with issues</div><div><b>${score}%</b>data quality score</div>`;
+ iss.innerHTML=Object.keys(issues).length?"<table><tr><th>ID</th><th>Name</th><th>Issues</th></tr>"+Object.entries(issues).map(([id,v])=>{const r=rows.find(x=>x.id==id);return`<tr><td>${id}</td><td>${r.first_name} ${r.last_name}</td><td>${v.map(x=>`<span class="pill medium">${x}</span>`).join("")}</td></tr>`}).join("")+"</table>":"All clean ✨";
+ drawQ();norm_.innerHTML="<table><tr><th>ID</th><th>Name</th><th>Email</th><th>Company key</th><th>Phone</th></tr>"+rows.map(r=>`<tr><td>${r.id}</td><td>${r.first_name} ${r.last_name}</td><td>${r.email}</td><td>${r.company_key}</td><td>${r.phone||"—"}</td></tr>`).join("")+"</table>"}
+const norm_=document.getElementById("norm");
+function drawQ(){dupes.innerHTML=queue.length?queue.map((q,i)=>`<div style="border-bottom:1px solid var(--line);padding:8px 0"><b>#${q.a.id} ${q.a.first_name} ${q.a.last_name}</b> ↔ <b>#${q.b.id} ${q.b.first_name} ${q.b.last_name}</b> <span class="pill ${q.s==1?'high':'medium'}">match ${q.s}</span><br><span class="muted">Suggest keeping #${q.keep} (most complete)</span><br>
+ ${q.status=="pending"?`<button style="padding:6px 14px;margin-top:6px" onclick="act(${i},'approved')">Approve merge</button> <button class="ghost" style="padding:6px 14px;margin-top:6px" onclick="act(${i},'rejected')">Not a duplicate</button>`:`<span class="pill ${q.status=='approved'?'low':'medium'}">${q.status}</span>`}</div>`).join(""):"No duplicates at this threshold."}
+function act(i,s){queue[i].status=s;drawQ()}
+run();
+</script>
+<footer>Built by <b>Nae Kitakado</b>, AI Automation Consultant · <a href="https://github.com/naekitakadoportfolio">GitHub</a> · <a href="https://www.linkedin.com/in/nae-k-203194265">LinkedIn</a> · <a href="https://sider.ai/agents/web-creator/share/695ea81100a621619985fdfb">Portfolio</a><br>All data is fictional. This demo runs entirely in your browser.</footer></div></body></html>
