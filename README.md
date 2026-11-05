@@ -1,3 +1,12 @@
+<p align="center"><img src="assets/banner.svg" alt="banner" width="100%"></p>
+
+<p align="center">
+<img src="https://img.shields.io/badge/Python-3.10+-5B3A3A?style=flat-square">
+<img src="https://img.shields.io/badge/tests-passing-F2A7C3?style=flat-square">
+<img src="https://img.shields.io/badge/data-fictional-FBE3EC?style=flat-square">
+<a href="https://sider.ai/agents/web-creator/share/695ea81100a621619985fdfb"><img src="https://img.shields.io/badge/Portfolio-Nae_Kitakado-F4B4CD?style=flat-square"></a>
+</p>
+
 # CRM Hygiene Automation
 
 A nightly data-quality pipeline for CRM contacts. It **normalizes** messy records, **validates** fields, **detects duplicates** with fuzzy matching, and sends a **merge review queue** to Slack. Nothing destructive happens without a human approving it.
@@ -26,3 +35,6 @@ Import `n8n/crm-hygiene-workflow.json` into n8n to see the orchestration layer.
 
 ## Sample result
 6 records → 2 duplicate pairs found (same email, name and company variants), 1 invalid email, 2 missing owners, with a quality score you can track week over week.
+
+---
+<p align="center"><sub>Built by <b>Nae Kitakado</b>, AI Automation Consultant Â· <a href="https://www.linkedin.com/in/nae-k-203194265">LinkedIn</a> Â· <a href="https://sider.ai/agents/web-creator/share/695ea81100a621619985fdfb">Portfolio</a> Â· open to retainer &amp; part-time consulting</sub></p>
